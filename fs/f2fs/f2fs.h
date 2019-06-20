@@ -3971,3 +3971,7 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
 }
 
 #endif
+
+#define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+
