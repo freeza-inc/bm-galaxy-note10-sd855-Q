@@ -362,4 +362,3 @@ config	BOEFFLA_WL_BLOCKER
 		bool "Boeffla generic wakelock blocker driver"
 		depends on PM
 		default N
->>>>>>> 99b9e2f4e4f0... Boeffla wakelock blocker and generic predefined wakelock blocker.
