@@ -239,8 +239,6 @@ source "drivers/muic/universal/Kconfig"
 
 source "drivers/ccic/Kconfig"
 
-source "drivers/redriver/Kconfig"
-
 source "drivers/adsp_factory/Kconfig"
 
 source "drivers/motor/Kconfig"

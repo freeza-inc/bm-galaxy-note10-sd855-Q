@@ -214,10 +214,6 @@ obj-$(CONFIG_TRUSTONIC_TEE)	+= gud/
 # CCIC
 obj-y				+= ccic/
 
-# COMBO REDRIVER
-obj-$(CONFIG_COMBO_REDRIVER)	+= redriver/
-obj-$(CONFIG_COMBO_REDRIVER_PTN36502)	+= redriver/
-
 # Motor
 obj-y				+= motor/
 
