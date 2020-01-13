@@ -27,6 +27,10 @@
 #include "ss_dsi_panel_common.h"
 #endif
 
+#ifdef CONFIG_KLAPSE
+#include <linux/klapse.h>
+#endif
+
 /**
  * topology is currently defined by a set of following 3 values:
  * 1. num of layer mixers
@@ -787,6 +791,10 @@ static int dsi_panel_update_backlight(struct dsi_panel *panel,
 	}
 
 	dsi = &panel->mipi_device;
+
+#ifdef CONFIG_KLAPSE
+	set_rgb_slider(bl_lvl);
+#endif
 
 #if defined(CONFIG_DISPLAY_SAMSUNG)
 	rc = ss_brightness_dcs(panel->panel_private, bl_lvl, BACKLIGHT_NORMAL);
