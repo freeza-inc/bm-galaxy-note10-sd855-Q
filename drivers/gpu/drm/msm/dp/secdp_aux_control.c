@@ -32,8 +32,9 @@
 #include <linux/module.h>
 #include <linux/uaccess.h>
 #include <linux/sched/signal.h>
-
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 #include <linux/secdp_logger.h>
+#endif
 #include "secdp_aux_control.h"
 
 #define DP_ENUM_STR(x)	#x

@@ -42,7 +42,9 @@
 #include "drm_crtc_helper_internal.h"
 
 #ifdef CONFIG_SEC_DISPLAYPORT
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 #include <linux/secdp_logger.h>
+#endif
 #define DP_ENUM_STR(x)	#x
 
 #define IOCTL_MAGIC		't'

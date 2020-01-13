@@ -17,7 +17,9 @@
 #include <linux/usb/usbpd.h>
 #include <linux/usb/manager/usb_typec_manager_notifier.h>
 #include <linux/ccic/ccic_notifier.h>
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 #include <linux/secdp_logger.h>
+#endif
 #include <linux/wakelock.h>
 
 #include "dp_power.h"

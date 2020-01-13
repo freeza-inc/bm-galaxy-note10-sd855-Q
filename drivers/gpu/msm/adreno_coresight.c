@@ -11,6 +11,7 @@
  */
 
 #include <linux/platform_device.h>
+#ifdef CONFIG_CORESIGHT
 #include <linux/coresight.h>
 
 #include "adreno.h"
@@ -438,3 +439,4 @@ int adreno_coresight_init(struct adreno_device *adreno_dev)
 
 	return ret;
 }
+#endif

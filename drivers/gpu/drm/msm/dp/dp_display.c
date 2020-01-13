@@ -2151,8 +2151,9 @@ static int secdp_ccic_noti_cb(struct notifier_block *nb, unsigned long action,
 			secdp_bigdata_save_item(BD_ADT_VID, noti.sub2);
 			secdp_bigdata_save_item(BD_ADT_PID, noti.sub3);
 #endif
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 			secdp_logger_set_max_count(300);
-
+#endif
 #ifndef SECDP_USB_CONCURRENCY
 			/* see dp_display_usbpd_configure_cb() */
 			dp_display_host_init(dp);
@@ -2175,7 +2176,9 @@ static int secdp_ccic_noti_cb(struct notifier_block *nb, unsigned long action,
 				goto end;
 			}
 			dp->is_dp_disconnecting = 1;
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 			secdp_logger_set_max_count(300);
+#endif
 #ifdef CONFIG_COMBO_REDRIVER_PTN36502
 			secdp_redriver_onoff(false, 0);
 #endif
@@ -2256,7 +2259,9 @@ static int secdp_ccic_noti_cb(struct notifier_block *nb, unsigned long action,
 		}
 
 		if (noti.sub1 == CCIC_NOTIFY_HIGH) {
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 			secdp_logger_set_max_count(300);
+#endif
 			atomic_set(&dp->sec.hpd, 1);
 			dp->hpd->hpd_high = true;
 		} else /* if (noti.sub1 == CCIC_NOTIFY_LOW) */ {
@@ -4451,7 +4456,9 @@ static int dp_display_probe(struct platform_device *pdev)
 
 #ifdef CONFIG_SEC_DISPLAYPORT
 	g_secdp_priv = dp;
+#ifdef CONFIG_SEC_DISPLAYPORT_LOGGER
 	secdp_logger_init();
+#endif
 	atomic_set(&dp->notification_status, 0);
 #endif
 
