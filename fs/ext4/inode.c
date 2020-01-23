@@ -732,11 +732,10 @@ out_sem:
 		    !(flags & EXT4_GET_BLOCKS_ZERO) &&
 		    !ext4_is_quota_file(inode) &&
 		    ext4_should_order_data(inode) &&
+		    !(flags & EXT4_GET_BLOCKS_IO_SUBMIT)) {
 			loff_t start_byte =
 				(loff_t)map->m_lblk << inode->i_blkbits;
 			loff_t length = (loff_t)map->m_len << inode->i_blkbits;
-
-		    !(flags & EXT4_GET_BLOCKS_IO_SUBMIT)) {
 #if 0
 			if (flags & EXT4_GET_BLOCKS_IO_SUBMIT)
 				ret = ext4_jbd2_inode_add_wait(handle, inode,
