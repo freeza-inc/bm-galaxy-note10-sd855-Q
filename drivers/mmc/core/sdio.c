@@ -1081,7 +1081,6 @@ static int mmc_sdio_resume(struct mmc_host *host)
 		}
 	}
 
-	if (!err && host->sdio_irqs) {
 	if (err)
 		goto out;
 
