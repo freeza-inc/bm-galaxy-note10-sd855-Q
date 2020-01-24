@@ -26,10 +26,10 @@
 static bool __maybe_unused
 is_affected_midr_range(const struct arm64_cpu_capabilities *entry, int scope)
 {
+	u32 midr = read_cpuid_id();
+
 	WARN_ON(scope != SCOPE_LOCAL_CPU || preemptible());
-	return MIDR_IS_CPU_MODEL_RANGE(read_cpuid_id(), entry->midr_model,
-				       entry->midr_range_min,
-				       entry->midr_range_max);
+	return is_midr_in_range(midr, &entry->midr_range);
 }
 
 static bool __maybe_unused
@@ -51,7 +51,7 @@ is_kryo_midr(const struct arm64_cpu_capabilities *entry, int scope)
 	model &= MIDR_IMPLEMENTOR_MASK | (0xf00 << MIDR_PARTNUM_SHIFT) |
 		 MIDR_ARCHITECTURE_MASK;
 
-	return model == entry->midr_model;
+	return model == entry->midr_range.model;
 }
 
 static bool
@@ -387,41 +387,19 @@ out_printmsg:
 }
 #endif	/* CONFIG_ARM64_SSBD */
 
-#define CAP_MIDR_RANGE(model, v_min, r_min, v_max, r_max)	\
-	.matches = is_affected_midr_range,			\
-	.midr_model = model,					\
-	.midr_range_min = MIDR_CPU_VAR_REV(v_min, r_min),	\
-	.midr_range_max = MIDR_CPU_VAR_REV(v_max, r_max)
+#define MIDR_RANGE(model, min, max) \
+	.def_scope = SCOPE_LOCAL_CPU, \
+	.matches = is_affected_midr_range, \
+	.midr_model = model, \
+	.midr_range_min = min, \
+	.midr_range_max = max
 
-#define CAP_MIDR_ALL_VERSIONS(model)					\
-	.matches = is_affected_midr_range,				\
-	.midr_model = model,						\
-	.midr_range_min = MIDR_CPU_VAR_REV(0, 0),			\
+#define MIDR_ALL_VERSIONS(model) \
+	.def_scope = SCOPE_LOCAL_CPU, \
+	.matches = is_affected_midr_range, \
+	.midr_model = model, \
+	.midr_range_min = 0, \
 	.midr_range_max = (MIDR_VARIANT_MASK | MIDR_REVISION_MASK)
-
-#define MIDR_FIXED(rev, revidr_mask) \
-	.fixed_revs = (struct arm64_midr_revidr[]){{ (rev), (revidr_mask) }, {}}
-
-#define ERRATA_MIDR_RANGE(model, v_min, r_min, v_max, r_max)		\
-	.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,				\
-	CAP_MIDR_RANGE(model, v_min, r_min, v_max, r_max)
-
-#define CAP_MIDR_RANGE_LIST(list)				\
-	.matches = is_affected_midr_range_list,			\
-	.midr_range_list = list
-
-/* Errata affecting a range of revisions of  given model variant */
-#define ERRATA_MIDR_REV_RANGE(m, var, r_min, r_max)	 \
-	ERRATA_MIDR_RANGE(m, var, r_min, var, r_max)
-
-/* Errata affecting a single variant/revision of a model */
-#define ERRATA_MIDR_REV(model, var, rev)	\
-	ERRATA_MIDR_RANGE(model, var, rev, var, rev)
-
-/* Errata affecting all variants/revisions of a given a model */
-#define ERRATA_MIDR_ALL_VERSIONS(model)				\
-	.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,			\
-	CAP_MIDR_ALL_VERSIONS(model)
 
 const struct arm64_cpu_capabilities arm64_errata[] = {
 #if	defined(CONFIG_ARM64_ERRATUM_826319) || \
@@ -431,8 +409,8 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cortex-A53 r0p[012] */
 		.desc = "ARM errata 826319, 827319, 824069",
 		.capability = ARM64_WORKAROUND_CLEAN_CACHE,
-		ERRATA_MIDR_REV_RANGE(MIDR_CORTEX_A53, 0, 0, 2),
-		.cpu_enable = cpu_enable_cache_maint_trap,
+		MIDR_RANGE(MIDR_CORTEX_A53, 0x00, 0x02),
+		.enable = cpu_enable_cache_maint_trap,
 	},
 #endif
 #ifdef CONFIG_ARM64_ERRATUM_819472
@@ -440,8 +418,8 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cortex-A53 r0p[01] */
 		.desc = "ARM errata 819472",
 		.capability = ARM64_WORKAROUND_CLEAN_CACHE,
-		ERRATA_MIDR_REV_RANGE(MIDR_CORTEX_A53, 0, 0, 1),
-		.cpu_enable = cpu_enable_cache_maint_trap,
+		MIDR_RANGE(MIDR_CORTEX_A53, 0x00, 0x01),
+		.enable = cpu_enable_cache_maint_trap,
 	},
 #endif
 #ifdef CONFIG_ARM64_ERRATUM_832075
@@ -449,9 +427,9 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cortex-A57 r0p0 - r1p2 */
 		.desc = "ARM erratum 832075",
 		.capability = ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE,
-		ERRATA_MIDR_RANGE(MIDR_CORTEX_A57,
-				  0, 0,
-				  1, 2),
+		MIDR_RANGE(MIDR_CORTEX_A57,
+			   MIDR_CPU_VAR_REV(0, 0),
+			   MIDR_CPU_VAR_REV(1, 2)),
 	},
 #endif
 #ifdef CONFIG_ARM64_ERRATUM_834220
@@ -459,9 +437,9 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cortex-A57 r0p0 - r1p2 */
 		.desc = "ARM erratum 834220",
 		.capability = ARM64_WORKAROUND_834220,
-		ERRATA_MIDR_RANGE(MIDR_CORTEX_A57,
-				  0, 0,
-				  1, 2),
+		MIDR_RANGE(MIDR_CORTEX_A57,
+			   MIDR_CPU_VAR_REV(0, 0),
+			   MIDR_CPU_VAR_REV(1, 2)),
 	},
 #endif
 #ifdef CONFIG_ARM64_ERRATUM_845719
@@ -469,7 +447,7 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cortex-A53 r0p[01234] */
 		.desc = "ARM erratum 845719",
 		.capability = ARM64_WORKAROUND_845719,
-		ERRATA_MIDR_REV_RANGE(MIDR_CORTEX_A53, 0, 0, 4),
+		MIDR_RANGE(MIDR_CORTEX_A53, 0x00, 0x04),
 	},
 	{
 	/* Kryo2xx Silver rAp4 */
@@ -483,7 +461,7 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cavium ThunderX, pass 1.x */
 		.desc = "Cavium erratum 23154",
 		.capability = ARM64_WORKAROUND_CAVIUM_23154,
-		ERRATA_MIDR_REV_RANGE(MIDR_THUNDERX, 0, 0, 1),
+		MIDR_RANGE(MIDR_THUNDERX, 0x00, 0x01),
 	},
 #endif
 #ifdef CONFIG_CAVIUM_ERRATUM_27456
@@ -491,15 +469,15 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cavium ThunderX, T88 pass 1.x - 2.1 */
 		.desc = "Cavium erratum 27456",
 		.capability = ARM64_WORKAROUND_CAVIUM_27456,
-		ERRATA_MIDR_RANGE(MIDR_THUNDERX,
-				  0, 0,
-				  1, 1),
+		MIDR_RANGE(MIDR_THUNDERX,
+			   MIDR_CPU_VAR_REV(0, 0),
+			   MIDR_CPU_VAR_REV(1, 1)),
 	},
 	{
 	/* Cavium ThunderX, T81 pass 1.0 */
 		.desc = "Cavium erratum 27456",
 		.capability = ARM64_WORKAROUND_CAVIUM_27456,
-		ERRATA_MIDR_REV(MIDR_THUNDERX_81XX, 0, 0),
+		MIDR_RANGE(MIDR_THUNDERX_81XX, 0x00, 0x00),
 	},
 #endif
 #ifdef CONFIG_CAVIUM_ERRATUM_30115
@@ -507,47 +485,48 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cavium ThunderX, T88 pass 1.x - 2.2 */
 		.desc = "Cavium erratum 30115",
 		.capability = ARM64_WORKAROUND_CAVIUM_30115,
-		ERRATA_MIDR_RANGE(MIDR_THUNDERX,
-				      0, 0,
-				      1, 2),
+		MIDR_RANGE(MIDR_THUNDERX, 0x00,
+			   (1 << MIDR_VARIANT_SHIFT) | 2),
 	},
 	{
 	/* Cavium ThunderX, T81 pass 1.0 - 1.2 */
 		.desc = "Cavium erratum 30115",
 		.capability = ARM64_WORKAROUND_CAVIUM_30115,
-		ERRATA_MIDR_REV_RANGE(MIDR_THUNDERX_81XX, 0, 0, 2),
+		MIDR_RANGE(MIDR_THUNDERX_81XX, 0x00, 0x02),
 	},
 	{
 	/* Cavium ThunderX, T83 pass 1.0 */
 		.desc = "Cavium erratum 30115",
 		.capability = ARM64_WORKAROUND_CAVIUM_30115,
-		ERRATA_MIDR_REV(MIDR_THUNDERX_83XX, 0, 0),
+		MIDR_RANGE(MIDR_THUNDERX_83XX, 0x00, 0x00),
 	},
 #endif
 	{
 		.desc = "Mismatched cache line size",
 		.capability = ARM64_MISMATCHED_CACHE_LINE_SIZE,
 		.matches = has_mismatched_cache_type,
-		.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,
-		.cpu_enable = cpu_enable_trap_ctr_access,
+		.def_scope = SCOPE_LOCAL_CPU,
+		.enable = cpu_enable_trap_ctr_access,
 	},
 	{
 		.desc = "Mismatched cache type",
 		.capability = ARM64_MISMATCHED_CACHE_TYPE,
 		.matches = has_mismatched_cache_type,
-		.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,
-		.cpu_enable = cpu_enable_trap_ctr_access,
+		.def_scope = SCOPE_LOCAL_CPU,
+		.enable = cpu_enable_trap_ctr_access,
 	},
 #ifdef CONFIG_QCOM_FALKOR_ERRATUM_1003
 	{
 		.desc = "Qualcomm Technologies Falkor erratum 1003",
 		.capability = ARM64_WORKAROUND_QCOM_FALKOR_E1003,
-		ERRATA_MIDR_REV(MIDR_QCOM_FALKOR_V1, 0, 0),
+		MIDR_RANGE(MIDR_QCOM_FALKOR_V1,
+			   MIDR_CPU_VAR_REV(0, 0),
+			   MIDR_CPU_VAR_REV(0, 0)),
 	},
 	{
 		.desc = "Qualcomm Technologies Kryo erratum 1003",
 		.capability = ARM64_WORKAROUND_QCOM_FALKOR_E1003,
-		.type = ARM64_CPUCAP_LOCAL_CPU_ERRATUM,
+		.def_scope = SCOPE_LOCAL_CPU,
 		.midr_model = MIDR_QCOM_KRYO,
 		.matches = is_kryo_midr,
 	},
@@ -556,7 +535,9 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	{
 		.desc = "Qualcomm Technologies Falkor erratum 1009",
 		.capability = ARM64_WORKAROUND_REPEAT_TLBI,
-		ERRATA_MIDR_REV(MIDR_QCOM_FALKOR_V1, 0, 0),
+		MIDR_RANGE(MIDR_QCOM_FALKOR_V1,
+			   MIDR_CPU_VAR_REV(0, 0),
+			   MIDR_CPU_VAR_REV(0, 0)),
 	},
 #endif
 #ifdef CONFIG_ARM64_ERRATUM_1286807
@@ -580,7 +561,7 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
 	/* Cortex-A73 all versions */
 		.desc = "ARM erratum 858921",
 		.capability = ARM64_WORKAROUND_858921,
-		ERRATA_MIDR_ALL_VERSIONS(MIDR_CORTEX_A73),
+		MIDR_ALL_VERSIONS(MIDR_CORTEX_A73),
 	},
 	{
 	/* KRYO2XX all versions */
