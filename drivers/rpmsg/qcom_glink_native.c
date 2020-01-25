@@ -299,7 +299,7 @@ static void qcom_glink_channel_release(struct kref *ref)
 	wake_up(&channel->intent_req_event);
 
 	/* cancel pending rx_done work */
-	cancel_work_sync(&channel->intent_work);
+	kthread_cancel_work_sync(&channel->intent_work);
 
 	spin_lock_irqsave(&channel->intent_lock, flags);
 	/* Free all non-reuse intents pending rx_done work */
@@ -1916,6 +1916,7 @@ static void qcom_glink_notif_reset(void *data)
 		wake_up(&channel->intent_req_event);
 	}
 	spin_unlock_irqrestore(&glink->idr_lock, flags);
+}
 
 static void qcom_glink_cancel_rx_work(struct qcom_glink *glink)
 {
@@ -2062,14 +2063,10 @@ void qcom_glink_native_remove(struct qcom_glink *glink)
 	if (ret)
 		dev_warn(glink->dev, "Can't remove GLINK devices: %d\n", ret);
 
-	spin_lock_irqsave(&glink->idr_lock, flags);
 	idr_for_each_entry(&glink->lcids, channel, cid) {
-		spin_unlock_irqrestore(&glink->idr_lock, flags);
 		/* cancel pending rx_done work for each channel*/
 		kthread_cancel_work_sync(&channel->intent_work);
-		spin_lock_irqsave(&glink->idr_lock, flags);
 	}
-	spin_unlock_irqrestore(&glink->idr_lock, flags);
 
 	/* Release any defunct local channels, waiting for close-ack */
 	idr_for_each_entry(&glink->lcids, channel, cid) {
