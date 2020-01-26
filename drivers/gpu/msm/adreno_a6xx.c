@@ -3383,5 +3383,4 @@ struct adreno_gpudev adreno_a6xx_gpudev = {
 	.zap_shader_unload = a6xx_zap_shader_unload,
 	.secure_pt_hibernate = a6xx_secure_pt_hibernate,
 	.secure_pt_restore = a6xx_secure_pt_restore,
-#endif
 };
