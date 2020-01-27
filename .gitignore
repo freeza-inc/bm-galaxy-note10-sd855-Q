@@ -3,3 +3,5 @@
 /builddef.sh
 /buildnope.sh
 /buildnope2.sh
+/.wireguard-fetch-lock
+/net/wireguard/*
