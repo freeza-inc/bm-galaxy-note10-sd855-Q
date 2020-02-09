@@ -1750,11 +1750,12 @@ submit_and_realloc:
 		}
 
 		/* DDAR changes */
+#ifdef CONFIG_DDAR
 		if (!fscrypt_dd_can_merge_bio(bio, mapping)) {
 			__submit_bio(F2FS_I_SB(inode), bio, DATA);
 			bio = NULL;
 		}
-
+#endif
 		if (bio == NULL) {
 			bio = f2fs_grab_read_bio(inode, block_nr, nr_pages,
 					is_readahead ? REQ_RAHEAD : 0);

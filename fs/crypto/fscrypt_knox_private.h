@@ -33,6 +33,7 @@
 #define FSCRYPT_KNOX_FLG_SDP_IS_DIRECTORY           0x40000000
 #define FSCRYPT_KNOX_FLG_SDP_IS_PROTECTED           0x80000000
 
+#ifdef CONFIG_DDAR
 static inline int fscrypt_dd_flg_enabled(int flags) {
 	return (flags & FSCRYPT_KNOX_FLG_DDAR_ENABLED) ? 1:0;
 }
@@ -48,9 +49,11 @@ static inline int fscrypt_dd_flg_kernel_crypto(int flags) {
 static inline int fscrypt_dd_flg_gid_restricted(int flags, int gid) {
 	return (flags & FSCRYPT_KNOX_FLG_DDAR_GID_RESTRICTION) ? 1:0;
 }
+#endif
 
 struct fscrypt_context;
 
+#ifdef CONFIG_DDAR
 int dd_test_and_inherit_context(
 		struct fscrypt_context *ctx,
 		struct inode *parent, struct inode *child,
@@ -61,5 +64,5 @@ int update_encryption_context_with_dd_policy(
 		const struct dd_policy *policy);
 
 void *dd_get_info(const struct inode *inode);
-
+#endif
 #endif /* FS_CRYPTO_FSCRYPT_KNOX_PRIVATE_H_ */

@@ -2438,7 +2438,7 @@ static int f2fs_set_context(struct inode *inode, const void *ctx, size_t len,
 				ctx, len, fs_data, XATTR_CREATE);
 }
 
-#if defined(CONFIG_DDAR) || defined(CONFIG_FSCRYPT_SDP)
+#if defined(CONFIG_DDAR)
 static int f2fs_get_knox_context(struct inode *inode, const char *name, void *val, size_t len)
 {
 	return f2fs_getxattr(inode, F2FS_XATTR_INDEX_ENCRYPTION,
@@ -2466,7 +2466,7 @@ static const struct fscrypt_operations f2fs_cryptops = {
 	.key_prefix	= "f2fs:",
 	.get_context	= f2fs_get_context,
 	.set_context	= f2fs_set_context,
-#if defined(CONFIG_DDAR) || defined(CONFIG_FSCRYPT_SDP)
+#if defined(CONFIG_DDAR)
 	.get_knox_context = f2fs_get_knox_context,
 	.set_knox_context = f2fs_set_knox_context,
 #endif
