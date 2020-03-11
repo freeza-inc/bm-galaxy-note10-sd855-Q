@@ -6,3 +6,4 @@
 /.wireguard-fetch-lock
 /net/wireguard/*
 /buildclean2.sh
+/buildnope1.sh
